@@ -1,8 +1,9 @@
 import PropTypes from "prop-types";
 import Layout from "../components/Layout";
+import Link from "next/link";
 import axios from "axios";
 
-function Home({ stories }) {
+function Home({ stories, page }) {
   return (
     <Layout title="Home">
       <div className="row justify-content-center mt-3">
@@ -16,10 +17,17 @@ function Home({ stories }) {
             {stories &&
               stories.map((story) => (
                 <li className="list-group-item" key={story.id}>
-                  {story.title}
+                  <Link href={`/story?id=${story.id}`}>
+                    <a>{story.title}</a>
+                  </Link>
                 </li>
               ))}
           </ul>
+          <div className="my-3 text-right">
+            <Link href={`/?page=${page + 1}`}>
+              <a>Next Page</a>
+            </Link>
+          </div>
         </div>
       </div>
     </Layout>
@@ -27,10 +35,14 @@ function Home({ stories }) {
 }
 
 //This function will be executed at build time on server side
-export async function getStaticProps() {
+export async function getServerSideProps({ query }) {
   let stories;
+  let page;
   try {
-    const res = await axios.get("http://node-hnapi.herokuapp.com/news?page=1");
+    page = Number(query.page) || 1;
+    const res = await axios.get(
+      `http://node-hnapi.herokuapp.com/news?page=${page}`
+    );
     stories = res.data;
   } catch (err) {
     console.error(err);
@@ -39,6 +51,7 @@ export async function getStaticProps() {
   //return the props
   return {
     props: {
+      page,
       stories,
     },
   };
